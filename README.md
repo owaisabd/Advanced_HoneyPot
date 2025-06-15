@@ -1,168 +1,200 @@
-![HONEPY-Logo](/assets/images/honeypy-logo-black-text.png)
+# HONEYPY
 
-A modular, graphic-based honeypot to capture IP Adresses, usernames, passwords, and commands from various protocols (SSH & HTTP supported right now). Written in Python.
+![HONEPY Logo](/assets/images/honeypy-logo-black-text.png)
 
-# Install
+HONEYPY is a modular honeypot built with Python that simulates SSH and HTTP services to collect data from unauthorized access attempts. It captures attacker IPs, usernames, passwords, and commands, and presents them through a web-based dashboard for easy analysis. The project is designed for learning, research, and security testing purposes.
 
-**1) Clone repository.**
-`git clone https://github.com/collinsmc23/ssh_honeypy.git`
+---
 
-**2) Permissions.**
-Move into `ssh_honeypy` folder.
+## Features
 
-Ensure `main.py` has proper permisions. (`chmod 755 honeypy.py`)
+- SSH and HTTP honeypot modules
+- Full logging of credentials and command inputs
+- Visual dashboard using Dash (top IPs, usernames, passwords, commands)
+- Optional country code lookup for attacker IPs
+- Support for `--tarpit` mode to slow brute-force attacks
+- systemd service support for background operation
+- Custom credentials and port binding
+- Easy deployment and environment-based configuration
 
-**3) Keygen.**
+---
 
-Create a new folder `static`. 
+## Installation
 
-`mkdir static`
+1. **Clone the repository**
 
-Move into directory.
-
-`cd static`
-
-An RSA key must be generated for the SSH server host key. The SSH host key provides proper identification for the SSH server. Ensure the key is titled `server.key` and resides in the same relative directory to the main program.
-
-`ssh-keygen -t rsa -b 2048 -f server.key`
-
-# Usage
-
-To provision a new instance of HONEYPY, use the `honeypy.py` file. This is the main file to interface with for HONEYPY. 
-
-HONEYPY requires a bind IP address (`-a`) and network port to listen on (`-p`). Use `0.0.0.0` to listen on all network interfaces. The protocol type must also be defined.
-
-```
--a / --address: Bind address.
--p / --port: Port.
--s / --ssh OR -wh / --http: Declare honeypot type.
+```bash
+git clone https://github.com/your-username/ssh_honeypy.git
+cd ssh_honeypy
 ```
 
-Example: `python3 honeypy.py -a 0.0.0.0 -p 22 --ssh`
+2. **Set permissions**
 
-💡 If HONEPY is set up to listen on a privileged port (22), the program must be run with `sudo` or root privileges. No other services should be using the specified port. 
-
-If port 22 is being used as the listener, the default SSH port must be changed. Refer to Hostinger's "[How to Change the SSH Port](https://www.hostinger.com/tutorials/how-to-change-ssh-port-vps)" guide.
-
-❗ To run with `sudo`, the `root` account must have access to all Python libraries used in this project (libraries defined in `requirements.txt`). Install by switching to the root account, then supply:
-
-`root@my_host# pip install -r requirements`
-
-This will install all the packages for the root user, but it will affect the global environment and isn't considered the "safeest" way to do this.
-
-**Optional Arguments**
-
-A username (`-u`) and password (`-w`) can be specified to authenticate the SSH server. The default configuration will accept all usernames and passwords.
-
-```
--u / --username: Username.
--w / --password: Password.
--t / --tarpit: For SSH-based honeypots, -t can be used to trap sessions inside the shell, by sending a 'endless' SSH banner.
+```bash
+chmod 755 honeypy.py
 ```
 
-Example: `python3 main.py -a 0.0.0.0 -p 22 --ssh -u admin -w admin --tarpit`
+3. **Generate SSH host key**
 
-# Logging Files
+```bash
+mkdir static
+cd static
+ssh-keygen -t rsa -b 2048 -f server.key
+```
 
-HONEYPY has three loggers configured. Loggers will route to either `cmd_audits.log`, `creds_audits.log` (for SSH), and `http_audit.log` (for HTTP) log files for information capture.
+Make sure the file is named `server.key` and resides in the `static` folder.
 
-`cmd_audits.log`: Captures IP address, username, password, and all commands supplied.
+---
 
-`creds_audits.log`: Captures IP address, username, and password, comma seperated. Used to see how many hosts attempt to connect to SSH_HONEYPY.
+## Usage
 
-`http_audit.log`: Captures IP address, username, password.
+Run the honeypot using:
 
-The log files will be located in `../ssh_honeypy/log_files/..`
+```bash
+python3 honeypy.py -a 0.0.0.0 -p 22 --ssh
+```
 
-# Honeypot Types
-This honeypot was written with modularity in mind to support future honeypot types (Telnet, HTTPS, SMTP, etc). As of right now there are two honeypot types supported.
+**Arguments:**
+- `-a`, `--address`: Bind address (e.g., `0.0.0.0`)
+- `-p`, `--port`: Port to listen on
+- `--ssh` or `--http`: Honeypot type
+- `-u`, `--username`: (Optional) Enforce specific username
+- `-w`, `--password`: (Optional) Enforce specific password
+- `-t`, `--tarpit`: (SSH only) Send an endless banner to stall brute-force attempts
 
-## SSH
-The project started out with only supported SSH. Use the following instructions above to provision an SSH-based honeypot which emulates a basic shell.
+**Note:** Ports like 22 require `sudo`. Make sure root has access to required Python packages:
 
-💡 `-t / --tarpit`: A tarpit is a security mechanism designed to slow down or delay the attempts of an attacker trying to brute-force login credentials. Leveraging Python's time module, a very long SSH-banner is sent to a connecting shell session. The only way to get out of the session is by closing the terminal. 
+```bash
+sudo pip install -r requirements.txt
+```
 
-## HTTP
-Using Python Flask as a basic template to provision a simple web service, HONEYPY impersonates a default WordPress `wp-admin` login page. Username / password pairs are collected.
+---
 
-There are default credentials accepted, `admin` and `deeboodah`, which will proceed to a Rick Roll gif. Username and password can be changed using the `-u / --username: Username.
--w / --password: Password` arguments.
+## Logging
 
-The web-based honeypot runs on port 5000 by default. This can be changed using the `-p / --port` flag option.
+Logs are saved in the `log_files/` directory:
 
-💡 There is currently not a dashboard panel supported for HTTP-based results. This will be a future addition.
+- `cmd_audits.log`: IP, username, password, and all entered commands (SSH)
+- `creds_audits.log`: IP, username, and password (SSH login attempts)
+- `http_audit.log`: IP, username, and password (HTTP login attempts)
 
-# Dashboard
+---
 
-HONEYPY comes packaged with a `web_app.py` file. This can be run in a seperate terminal session on localhost to view statistics such as top 10 IP addresses, usernames, passwords, commands, and all data in tabular format. As of right now, the dashboards do not dynamically update as new entries or information are added to the log files. The dashboard must be run every time to re-populate to the most up-to-date information.
+## Honeypot Types
 
-Run `python3 web_app.py` on localhost. Default port for Python Dash is `8050`. `http://127.0.0.1:8050`. Go to your browser of choice to view dashboard metrics.
+### SSH Honeypot
 
-💡 The dashboard data includes a country code lookup that uses the IP address to determine the two-digit country code. To get the IP address, the [ipinfo() CleanTalk API](https://cleantalk.org/help/api-ip-info-country-code) is used. Due to rate limiting contraints, CleanTalk can only lookup 1000 IP addresses per 60 seconds. 
-- By default, the country code lookup is set to `False`, as this will have impact on how long it takes to provision the honeypot (pandas has to pivot on dataframes, which takes time). Set the `COUNTRY` environment variable to `True` if you would like to get the country code lookup dashboard panel.
-- If receiving rate limiting errors, change the `COUNTRY` environment variable in `public.env` to `False` again. 
+Simulates an interactive shell. Use the `--tarpit` flag to send a long SSH banner and keep attackers stalled.
 
-HONEPY leverages Python Dash to populate the bar charts, Dash Bootstrap Components for dark-theme and style of charts, and Pandas for data parsing.
+### HTTP Honeypot
 
-<img src="/assets/images/Dashboard.PNG" alt="Dashboard" width="600"/>
+Imitates a WordPress `wp-admin` login page using Flask. Captures submitted credentials. The default pair is `admin / deeboodah`, which leads to a Rick Roll. You can override the credentials using `-u` and `-w`.
 
-# VPS Hosting (General Tips)
-To host on VPS, follow the general tips.
+Port defaults to `5000`, but you can change it using `-p`.
 
-To gather logging information, it's advised to use a Virtual Private Server (VPS). VPS's are cloud-based hosts with Internet access. This provides a safe, isolated way to gather real-time information without having to configure and isolate infrastructure on your home network.
+---
 
-You can get 10% off Hostinger VPS with this code (not sponsored on this GitHub project): https://www.hostinger.com/grantcollins
+## Dashboard
 
-A majority of VPS hosting providers will provide a Virtual Firewall where you can open ports. Ensure to open ports used by HONEYPY.
-- `Port 80`, `Port 5000`, `Port 2223` (Whichever port you configure to listen on real SSH connection), `Port 8050`. 
+To view visual statistics from the log files:
 
-When working on Linux-based distributions, also open the ports with IP Tables or Unfiltered Firewall (UFW). 
-- `ufw enable`
-- `ufw allow [port]`
+```bash
+python3 web_app.py
+```
 
-# Running in Background With Systemd
-To run HONEPY in the background, you can use Systemd for popular Linux-based distributions.
+Then go to: [http://127.0.0.1:8050](http://127.0.0.1:8050)
 
-There is a template included under the systemd folder in this repo.
+Displays:
+- Top 10 IP addresses
+- Top usernames and passwords
+- Most executed commands
+- Tabular view of all entries
 
-Supply the required arguments after the `honeypy.py` to run with your desired configuration. Use your favorite text editor to change the configuration.
-- `ExecStart=/usr/bin/python3 /honeypy.py -a 127.0.0.1 -p 22 --ssh`
+**Country Code Lookup:**
+- Set `COUNTRY=True` in `public.env` to enable country code lookup using [CleanTalk API](https://cleantalk.org/help/api-ip-info-country-code)
+- Subject to rate limits (1,000 lookups per minute)
+- Set to `False` if slow or if rate-limited
 
-Copy `honeypy.service` template file into `/etc/systemd/system`. `cp honeypy.service /etc/systemd/system`.
+---
 
-Reload systemd with the new configuration added, `systemctl daemon-reload`.
+## Running on a VPS
 
-Enable the `honeypy.service` file with `systemctl enable honeypy.service`.  
+To host HONEYPY on a VPS:
 
-Start the `honepy.service` file with `systemctl start honepy.service`.
+- Open necessary ports in your firewall:
+  - `22` (SSH honeypot)
+  - `5000` (HTTP honeypot)
+  - `8050` (dashboard)
+  - `80` if redirecting traffic
+- Use `ufw` or your provider’s firewall:
 
-# Video Overview
+```bash
+sudo ufw enable
+sudo ufw allow 22
+sudo ufw allow 5000
+sudo ufw allow 8050
+```
 
-[![YouTube Video](https://img.youtube.com/vi/tyKyLhcKgNo/0.jpg)](https://youtu.be/tyKyLhcKgNo)
+---
 
-# Future Features
+## Running in Background with systemd
 
-- Write additional support for common protocols:
-- Telnet 
-    - HTTP ✅
-    - HTTP(S)
-    - SMTP
-    - RDP
-    - DNS
-    - Telnet
-- Custom DNS support.
-- Docker support for host-based isolation and code deployment.
-- Systemd support to run Python script in background. ✅
-- Create a basic overview Dashboard. ✅
-- Dynamic Dashboard Updates.
-- Dashboard hosted on seperate host to get results independent on honeypot host.
-- Add SSH Banner Tarpit to trap SSH sessions ✅ (`-t, --tarpit`)
+There’s a sample systemd service file in the repo.
 
-# Helpful Resources
+1. Edit `honeypy.service`:
 
-Resources and guides used while developing project.
+```
+ExecStart=/usr/bin/python3 /path/to/honeypy.py -a 0.0.0.0 -p 22 --ssh
+```
 
-- https://securehoney.net/blog/how-to-build-an-ssh-honeypot-in-python-and-docker-part-1.html 
+2. Move the file:
+
+```bash
+sudo cp honeypy.service /etc/systemd/system/
+```
+
+3. Enable and start the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable honeypy.service
+sudo systemctl start honeypy.service
+```
+
+---
+
+## Inspiration
+
+This project was inspired by [Grant Collins' SSH honeypot video](https://youtu.be/tyKyLhcKgNo), which provided a helpful foundation. From there, the project was extended with additional features including:
+
+- Multi-protocol support (SSH and HTTP)
+- Logging for credentials and commands
+- A visual dashboard for log analysis
+- Tarpit functionality
+- systemd integration
+- Environment variable support
+
+While the initial idea came from the video, most of the code and design were extended independently for a more complete and customizable honeypot system.
+
+---
+
+## Future Work
+
+- [x] SSH support
+- [x] HTTP honeypot with spoofed login
+- [x] Visual dashboard
+- [x] systemd integration
+- [x] Tarpit support
+- [ ] Dynamic dashboard updates
+- [ ] Docker deployment
+- [ ] Dashboard as a separate service
+- [ ] More protocols (Telnet, HTTPS, SMTP, RDP, DNS)
+
+---
+
+## Helpful Resources
+
+- https://securehoney.net/blog/how-to-build-an-ssh-honeypot-in-python-and-docker-part-1.html
 - https://medium.com/@abdulsamie488/deceptive-defense-building-a-python-honeypot-to-thwart-cyber-attackers-2a9d2ced2760
 - https://gist.github.com/cschwede/3e2c025408ab4af531651098331cce45
 - https://www.hostinger.com/tutorials/how-to-change-ssh-port-vps
